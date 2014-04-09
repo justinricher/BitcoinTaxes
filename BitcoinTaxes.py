@@ -166,7 +166,13 @@ class Transaction:
     def __init__(self, type, eventTimestamp, btc, usd, btc_price, fee, description=''):
         self.type = int(type)
         self.datetime = eventTimestamp
-        self.time = datetime.fromtimestamp(calendar.timegm(strptime(eventTimestamp, "%m/%d/%Y %H:%M")))  # 11/19/2013 19:14
+        
+        # There are two different formats recently used by Bitstamp in their export feature, try to accept either one
+        try:
+            self.time = datetime.fromtimestamp(calendar.timegm(strptime(eventTimestamp, "%m/%d/%Y %H:%M")))  # 11/19/2013 19:14
+        except Exception:
+            self.time = datetime.fromtimestamp(calendar.timegm(strptime(eventTimestamp, "%Y-%m-%d %H:%M:%S")))  # 2013-11-14 14:54:32
+            
         self.btc = float(btc)
         self.usd = float(usd)
         self.btc_price = float(btc_price)
