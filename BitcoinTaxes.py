@@ -163,7 +163,7 @@ class Transaction:
         A BTC transaction.
         type: 0:deposit, 1:withdrawal, 2:buy/sell, 
     """
-    def __init__(self, type, eventTimestamp, btc, usd, btc_price, fee, description=''):
+    def __init__(self, type, eventTimestamp, btc, usd, btc_price, fee='', description=''):
         self.type = int(type)
         self.datetime = eventTimestamp
         
@@ -176,7 +176,12 @@ class Transaction:
         self.btc = float(btc)
         self.usd = float(usd)
         self.btc_price = float(btc_price)
-        self.fee = float(fee)
+        
+        if(len(fee) == 0):
+            self.fee = 0.0
+        else:
+            self.fee = float(fee)
+        
         self.description = description
         # present balance is used to keep track of whether or not this was sold
         # for FIFO accounting
