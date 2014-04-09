@@ -44,6 +44,20 @@ Type,Date,BTC,USD,USD/BTC,Fee,Description
 
 `Description` can be optionally supplied.
 
+**Use case examples**
+
+* I purchased a good or service with Bitcoin.
+
+`2,8/30/2013 20:37,-0.1130999,15,132.63,0,purchased an online subscription`
+
+Explanation: On 8/30/2013, I spent 0.1130999 BTC worth $15.00.  At the time of the transaction, 1 BTC was worth $132.63.  There was no broker fee associated with this sale.
+
+* I received BTC as a gift or a tip.
+
+`2,3/28/2013 5:00,0.01326412,0,88,0,reddit tip`
+
+Explanation: On 3/28/2013, I received 0.01326412 BTC having spent $0 because it was a gift.  This means I have zero cost basis and the entire amount will be treated as gain.  At the time of the transaction, 1 BTC was worth $88.00.  There was no broker fee associated with this sale.
+
 ===
 
 If you found this program to be useful and would like to donate, 1FkkWv8wQqJBWUcRCZkd73D8pAsykxCGNM
