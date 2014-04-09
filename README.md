@@ -27,7 +27,7 @@ Type,Date,BTC,USD,USD/BTC,Fee,Description
 2,10/2/2013 14:39,0.4,-44.22,110.55,0.59,coinbase buy
 ```
 
-`Type` is the type of transaction represented. 0 = Deposit, 1 = Withdraw, 2 = Buy/Sell
+`Type` is the type of transaction represented. `0 = Deposit`, `1 = Withdraw`, `2 = Buy/Sell`
 
 `Date` is defined as `"%m/%d/%Y %H:%M"`, e.g. `11/19/2013 19:14`
 
