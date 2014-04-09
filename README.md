@@ -1,7 +1,7 @@
 BitcoinTaxes
 =========================
 
-NOTE: This script should be used with caution until unit testing has been completed.
+**NOTE: This script should be used with caution until unit testing has been completed.**
 
 This python script is currently capable of computing short term and long term capital gains based on a calendar year tax year and FIFO accounting.  The input file is based on the standard export file provided by Bitstamp with an additional optional column, `Description`.  Only a transaction with `Type == 2` (buy/sell) is considered when computing tax events because it is unknown if you own the sending or receiving account for depsoit and withdraw events.  Transferring money from one wallet to another is not a taxable event (although it may incur a mining fee, which I plan to account for as cost basis in later updates).
 
