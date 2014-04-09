@@ -67,10 +67,12 @@ def main():
             if trans.type == 2:
                 if trans.btc < 0:
                     # Sale
-                    shortGain, longGain, workingCopy = saleAction(trans, workingCopy)
+                    shortGain, longGain, basis, proceeds, workingCopy = saleAction(trans, workingCopy)
                     yearlyValues[year].shortGain += shortGain
                     yearlyValues[year].longGain += longGain
                     yearlyValues[year].sold += trans.usd
+                    yearlyValues[year].basis += basis
+                    yearlyValues[year].proceeds += proceeds
                     # uncomment to print sale date and present gain. useful to chart gain over time.
                     #print str(trans.time) + "," + str(yearlyValues[year].shortGain) + "," + str(yearlyValues[year].longGain)
                 else:
@@ -91,38 +93,45 @@ def main():
         print "Unexpected error:", sys.exc_info() 
 
 def saleAction(bTrans, workingCopy):
-    gain = 0.0
     shortGain = 0.0
     longGain = 0.0
+    basis = 0.0
+    proceeds = 0.0
+    complete = False
+    
     for aTrans in workingCopy:
         if(aTrans.presentBalance > 0 and aTrans.type == 2):
-            # all btc sales can be filled from this past purchase
-            if(aTrans.presentBalance >= (bTrans.presentBalance * -1.0)):
+            thisProceeds = 0.0
+            thisBasis = 0.0
+            # the sell volume can be filled from this single past purchase
+            if(aTrans.presentBalance >= (bTrans.presentBalance * -1.0)):   
+                # mark a portion of this past purchase as sold by reducing current quantity
                 aTrans.presentBalance += bTrans.presentBalance
-                gain = bTrans.presentBalance * (bTrans.btc_price - aTrans.btc_price) *\
-                        -1.0 + (aTrans.btc * aTrans.btc_price - aTrans.usd * -1 - aTrans.fee)
-                
-                if(relativedelta(bTrans.time, aTrans.time).years >= 1):
-                    longGain += gain
-                else:
-                    shortGain += gain
-                
-                return shortGain, longGain, workingCopy
+                thisBasis = (aTrans.usd / aTrans.btc) * bTrans.presentBalance
+                thisProceeds = (bTrans.presentBalance / bTrans.btc) * (bTrans.usd - bTrans.fee)
+                basis += thisBasis
+                proceeds += thisProceeds
+                complete = True
+            
             # current sale is greater than this last purchase, take only as much as
             # is currently available and then proceed to the next btc purchase event
             else:
-                gain = aTrans.presentBalance * (bTrans.btc_price - aTrans.btc_price) +\
-                        (aTrans.btc * aTrans.btc_price - aTrans.usd * -1 - aTrans.fee)
-                
-                if(relativedelta(bTrans.time, aTrans.time).years >= 1):
-                    longGain += gain
-                else:
-                    shortGain += gain
-                
+                thisBasis = (aTrans.presentBalance / aTrans.btc) * (aTrans.usd * -1 + aTrans.fee)
+                thisProceeds = aTrans.presentBalance * ((bTrans.usd - bTrans.fee) / bTrans.btc * -1)
+                basis += thisBasis
+                proceeds += thisProceeds
                 bTrans.presentBalance += aTrans.presentBalance
                 aTrans.presentBalance = 0
-                
-    return shortGain, longGain, workingCopy                   
+            
+            if(relativedelta(bTrans.time, aTrans.time).years >= 1):
+                longGain += (thisProceeds - thisBasis)
+            else:
+                shortGain += (thisProceeds - thisBasis)
+                    
+            if complete:
+                return shortGain, longGain, basis, proceeds, workingCopy
+                            
+    return shortGain, longGain, basis, proceeds, workingCopy                   
     
 def getData(arg):
     with open(arg, 'r') as f:
@@ -140,23 +149,31 @@ class YearlyValues:
     def __init__(self):
         self.bought = 0.0
         self.sold = 0.0
+        self.basis = 0.0
+        self.proceeds = 0.0
         self.shortGain = 0.0
         self.longGain = 0.0
         self.endingBtc = 0.0
         self.cumulativeBtc = 0.0
     
     def __str__(self):
-        return "bought: " + locale.currency(self.bought, grouping=True) + ", sold: " + \
-            locale.currency(self.sold, grouping=True) + ", short term gain: " + \
-            locale.currency(self.shortGain, grouping=True) + ", long term gain: " + \
-            locale.currency(self.longGain, grouping=True) + ", btcDelta: " + \
-            str(round(self.endingBtc, 8)) + ", cumulativeBtc: " + str(round(self.cumulativeBtc, 8))
+        return "bought: " + locale.currency(self.bought, grouping=True) + \
+            ", sold: " + locale.currency(self.sold, grouping=True) + \
+            ", basis: " + locale.currency(self.basis, grouping=True) + \
+            ", proceeds: " + locale.currency(self.proceeds, grouping=True) +\
+            ", short term gain: " + locale.currency(self.shortGain, grouping=True) +\
+            ", long term gain: " + locale.currency(self.longGain, grouping=True) +\
+            ", btcDelta: " + str(round(self.endingBtc, 8)) +\
+            ", cumulativeBtc: " + str(round(self.cumulativeBtc, 8))
     def __repr__(self):
-        return "bought: " + locale.currency(self.bought, grouping=True) + ", sold: " + \
-            locale.currency(self.sold, grouping=True) + ", short term gain: " + \
-            locale.currency(self.shortGain, grouping=True) + ", long term gain: " + \
-            locale.currency(self.longGain, grouping=True) + ", btcDelta: " + \
-            str(round(self.endingBtc, 8)) + ", cumulativeBtc: " + str(round(self.cumulativeBtc, 8))
+        return "bought: " + locale.currency(self.bought, grouping=True) + \
+            ", sold: " + locale.currency(self.sold, grouping=True) + \
+            ", basis: " + locale.currency(self.basis, grouping=True) + \
+            ", proceeds: " + locale.currency(self.proceeds, grouping=True) +\
+            ", short term gain: " + locale.currency(self.shortGain, grouping=True) +\
+            ", long term gain: " + locale.currency(self.longGain, grouping=True) +\
+            ", btcDelta: " + str(round(self.endingBtc, 8)) +\
+            ", cumulativeBtc: " + str(round(self.cumulativeBtc, 8))
     
 class Transaction:
     """
