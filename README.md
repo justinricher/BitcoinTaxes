@@ -9,10 +9,11 @@ This python script is currently capable of computing short term capital gains.
 
 **Sample Output**
 
+(fictional transaction history)
 ```
 Processing File: C:/2013 Taxes/Bitcoin Transactions.csv
-2013: bought: $3,423.84, sold: $4,247.73, gain: $1,123.08, btcDelta: 0.6322228, cumulativeBtc: 0.6322228
-2014: bought: $3,759.34, sold: $3,079.28, gain: ($161.22), btcDelta: 0.65365609, cumulativeBtc: 1.28587889
+2013: bought: $8,935.17, sold: $9,660.83, gain: $995.84, btcDelta: 0.43, cumulativeBtc: 0.43
+2014: bought: $4,864.60, sold: $4,568.55, gain: ($275.30), btcDelta: 0.22365609, cumulativeBtc: 0.65365609
 ```
 
 **Sample Input**
