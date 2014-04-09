@@ -46,4 +46,6 @@ Type,Date,BTC,USD,USD/BTC,Fee,Description
 
 ===
 
-If you found this useful and would like to donate, 1FkkWv8wQqJBWUcRCZkd73D8pAsykxCGNM
+If you found this program to be useful and would like to donate, 1FkkWv8wQqJBWUcRCZkd73D8pAsykxCGNM
+
+Thank you.
