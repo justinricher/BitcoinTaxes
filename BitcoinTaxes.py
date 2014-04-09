@@ -16,10 +16,13 @@
     along with this program.  If not, see <http://www.gnu.org/licenses/>.
 '''
 
+import calendar
 import copy
+from datetime import *
+from dateutil.relativedelta import relativedelta
 import locale
-import sys
 import string
+import sys
 from time import strftime, strptime
 
 def main():
@@ -45,7 +48,7 @@ def main():
         for trans in transactions:
             # store aggregate data for the year allowing all transactions to appear
             # in one large file while keeping tax values separated.
-            year = int(strftime("%Y", trans.time))
+            year = trans.time.year
             if year not in yearlyValues:
                 yearlyValues[year] = YearlyValues()
             
@@ -64,47 +67,62 @@ def main():
             if trans.type == 2:
                 if trans.btc < 0:
                     # Sale
-                    gain, workingCopy = saleAction(trans, workingCopy)
-                    yearlyValues[year].gain += gain
+                    shortGain, longGain, workingCopy = saleAction(trans, workingCopy)
+                    yearlyValues[year].shortGain += shortGain
+                    yearlyValues[year].longGain += longGain
                     yearlyValues[year].sold += trans.usd
                     # uncomment to print sale date and present gain. useful to chart gain over time.
-                    #print strftime("%Y-%m-%d %H:%M:%S", trans.time), yearlyValues[year].gain
+                    #print str(trans.time) + "," + str(yearlyValues[year].shortGain) + "," + str(yearlyValues[year].longGain)
                 else:
                     # Purchase
                     yearlyValues[year].bought += trans.usd * -1.0 + trans.fee
     
                 yearlyValues[year].endingBtc += trans.btc
         
-        # btcDelta is known for each year, use this value to compute
+        # endingBtc is known for each year, use this value to compute
         # running total btc balance known as cumulativeBtc
         for year in yearlyValues:
             for year2 in yearlyValues:
                 if year2 >= year:
                     yearlyValues[year2].cumulativeBtc += yearlyValues[year].endingBtc
             print (str(year) + ":"), yearlyValues[year]
-            
+                
     except Exception:
         print "Unexpected error:", sys.exc_info() 
 
 def saleAction(bTrans, workingCopy):
     gain = 0.0
+    shortGain = 0.0
+    longGain = 0.0
     for aTrans in workingCopy:
         if(aTrans.presentBalance > 0 and aTrans.type == 2):
             # all btc sales can be filled from this past purchase
-            if aTrans.presentBalance >= (bTrans.presentBalance * -1.0):
+            if(aTrans.presentBalance >= (bTrans.presentBalance * -1.0)):
                 aTrans.presentBalance += bTrans.presentBalance
-                gain += bTrans.presentBalance * (bTrans.btc_price - aTrans.btc_price) *\
+                gain = bTrans.presentBalance * (bTrans.btc_price - aTrans.btc_price) *\
                         -1.0 + (aTrans.btc * aTrans.btc_price - aTrans.usd * -1 - aTrans.fee)
-                return gain, workingCopy
+                
+                if(relativedelta(bTrans.time, aTrans.time).years >= 1):
+                    longGain += gain
+                else:
+                    shortGain += gain
+                
+                return shortGain, longGain, workingCopy
             # current sale is greater than this last purchase, take only as much as
             # is currently available and then proceed to the next btc purchase event
             else:
-                gain += aTrans.presentBalance * (bTrans.btc_price - aTrans.btc_price) +\
+                gain = aTrans.presentBalance * (bTrans.btc_price - aTrans.btc_price) +\
                         (aTrans.btc * aTrans.btc_price - aTrans.usd * -1 - aTrans.fee)
+                
+                if(relativedelta(bTrans.time, aTrans.time).years >= 1):
+                    longGain += gain
+                else:
+                    shortGain += gain
+                
                 bTrans.presentBalance += aTrans.presentBalance
                 aTrans.presentBalance = 0
                 
-    return gain, workingCopy                   
+    return shortGain, longGain, workingCopy                   
     
 def getData(arg):
     with open(arg, 'r') as f:
@@ -122,19 +140,22 @@ class YearlyValues:
     def __init__(self):
         self.bought = 0.0
         self.sold = 0.0
-        self.gain = 0.0
+        self.shortGain = 0.0
+        self.longGain = 0.0
         self.endingBtc = 0.0
         self.cumulativeBtc = 0.0
     
     def __str__(self):
         return "bought: " + locale.currency(self.bought, grouping=True) + ", sold: " + \
-            locale.currency(self.sold, grouping=True) + ", gain: " + \
-            locale.currency(self.gain, grouping=True) + ", btcDelta: " + \
+            locale.currency(self.sold, grouping=True) + ", short term gain: " + \
+            locale.currency(self.shortGain, grouping=True) + ", long term gain: " + \
+            locale.currency(self.longGain, grouping=True) + ", btcDelta: " + \
             str(round(self.endingBtc, 8)) + ", cumulativeBtc: " + str(round(self.cumulativeBtc, 8))
     def __repr__(self):
         return "bought: " + locale.currency(self.bought, grouping=True) + ", sold: " + \
-            locale.currency(self.sold, grouping=True) + ", gain: " + \
-            locale.currency(self.gain, grouping=True) + ", btcDelta: " + \
+            locale.currency(self.sold, grouping=True) + ", short term gain: " + \
+            locale.currency(self.shortGain, grouping=True) + ", long term gain: " + \
+            locale.currency(self.longGain, grouping=True) + ", btcDelta: " + \
             str(round(self.endingBtc, 8)) + ", cumulativeBtc: " + str(round(self.cumulativeBtc, 8))
     
 class Transaction:
@@ -142,10 +163,10 @@ class Transaction:
         A BTC transaction.
         type: 0:deposit, 1:withdrawal, 2:buy/sell, 
     """
-    def __init__(self, type, datetime, btc, usd, btc_price, fee, description=''):
+    def __init__(self, type, eventTimestamp, btc, usd, btc_price, fee, description=''):
         self.type = int(type)
-        self.datetime = datetime
-        self.time = strptime(datetime, "%m/%d/%Y %H:%M")  # 11/19/2013 19:14
+        self.datetime = eventTimestamp
+        self.time = datetime.fromtimestamp(calendar.timegm(strptime(eventTimestamp, "%m/%d/%Y %H:%M")))  # 11/19/2013 19:14
         self.btc = float(btc)
         self.usd = float(usd)
         self.btc_price = float(btc_price)
