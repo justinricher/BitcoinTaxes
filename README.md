@@ -32,7 +32,7 @@ Type,Date,BTC,USD,USD/BTC,Fee,Description
 
 `Type` is the type of transaction represented. `0 = Deposit`, `1 = Withdraw`, `2 = Buy/Sell`
 
-`Date` is defined as `"%m/%d/%Y %H:%M"`, e.g. `11/19/2013 19:14`
+`Date` is defined as `"%m/%d/%Y %H:%M"`, e.g. `11/19/2013 19:14` OR `"%Y-%m-%d %H:%M:%S"`, e.g. `2013-11-14 14:54:32`.  Bitstamp has used both formats in their export files in the recent past.
 
 `BTC` is the amount of Bitcoin transacted.  `BTC > 0` is a purchase. `BTC < 0` is a sale.
 
