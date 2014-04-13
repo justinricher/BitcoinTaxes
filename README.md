@@ -1,24 +1,41 @@
 BitcoinTaxes
-=========================
-
-**NOTE: This script should be used with caution until unit testing has been completed.**
+=
 
 This python script is currently capable of computing short term and long term capital gains based on a calendar year tax year and FIFO accounting.  The input file is based on the standard export file provided by Bitstamp with an additional optional column, `Description`.  Only a transaction with `Type == 2` (buy/sell) is considered when computing tax events because it is unknown if you own the sending or receiving account for depsoit and withdraw events.  Transferring money from one wallet to another is not a taxable event (although it may incur a mining fee, which I plan to account for as cost basis in later updates).
 
-You are encouraged to enter your entire Bitcoin transactional history in a single `.CSV` file and the program will group purchase and sell events into their respective tax years.
+You are encouraged to enter your entire Bitcoin transactional history in a single `.csv` file and the program will group purchase and sell events into their respective tax years.
 
 **Usage**
 
-```$ python BitcoinTaxes.py path_to_input_file.csv```
+```
+$ python BitcoinTaxes.py [-v] -f path_to_input_file.csv
+```
+
+```
+$ python BitcoinTaxes.py --help
+Usage: BitcoinTaxes.py [options]
+
+Options:
+  -h, --help            show this help message and exit
+  -f FILENAME, --file=FILENAME
+                        Input .csv file path
+  -v, --verbose         verbose console output
+```
 
 **Sample Output**
 
-(fictional transaction history)
+The output below shows fictional transaction history with verbose output and the full input path is abbreviated.  Transactions with $0.00 basis were recorded as such in the .csv file because they were tips, donations, or fully taxable acquisitions of BTC with no basis.
+
 ```
-Processing File: C:/2013 Taxes/Bitcoin Transactions.csv
-2012: bought: $303.95, sold: $0.00, basis: $0.00, proceeds: $0.00, short term gain: $0.00, long term gain: $0.00, btcDelta: 3.18453891, cumulativeBtc: 3.18453891
-2013: bought: $8,631.22, sold: $9,665.83, basis: $8,600.84, proceeds: $9,616.87, short term gain: $969.58, long term gain: $46.44, btcDelta: -2.75453891, cumulativeBtc: 0.43
-2014: bought: $4,864.60, sold: $4,568.55, basis: $4,833.01, proceeds: $4,545.72, short term gain: ($287.29), long term gain: $0.00, btcDelta: 0.22365609, cumulativeBtc: 0.65365609
+Processing File: C:\(...)\Bitcoin Transactions.csv
+2013-08-11 20:00:00 Selling 3.39907893 BTC
+	3.39907893 BTC partially filled from 3.18453891 BTC purchased on 2013-03-27 13:27:00 (basis: $303.95 proceeds: $350.39)
+	0.21454002 BTC partially filled from 0.0112759 BTC purchased on 2013-03-28 00:37:00 (basis: $0.00 proceeds: $1.24)
+	0.20326412 BTC partially filled from 0.01326412 BTC purchased on 2013-03-28 01:00:00 (basis: $0.00 proceeds: $1.46)
+	0.19 BTC partially filled from 0.15 BTC purchased on 2013-04-02 20:25:00 (basis: $20.75 proceeds: $16.50)
+	0.04 BTC fully filled from 0.04 BTC purchased on 2013-04-12 05:55:00 (basis: $0.00 proceeds: $4.40)
+2013-08-30 16:37:00 Selling 0.1130999 BTC
+	0.1130999 BTC fully filled from 0.3 BTC purchased on 2013-08-29 00:22:00 (basis: $13.46 proceeds: $15.00)
 ```
 
 **Sample Input**
@@ -26,10 +43,15 @@ Processing File: C:/2013 Taxes/Bitcoin Transactions.csv
 ```
 Type,Date,BTC,USD,USD/BTC,Fee,Description
 2,3/27/2013 17:27,3.18453891,-303.95,95.44,0,bit Instant purchase
-2,4/3/2013 0:25,0.15,-20.4,136,0.35,coinbase buy
-2,8/31/2013 5:08,0.4,-51.06,127.65,0.66,coinbase buy
-2,9/4/2013 18:25,0.4,-47.15,117.88,0.62,coinbase buy
-2,10/2/2013 14:39,0.4,-44.22,110.55,0.59,coinbase buy
+2,3/28/2013 4:37,0.0112759,0,88,0,tip
+2,3/28/2013 5:00,0.01326412,0,88,0,donation
+2,4/3/2013 0:25,0.15,-20.4,136,0.35,coinbase buy/sell
+2,4/12/2013 9:55,0.04,0,100,0,excel macro work
+2,8/12/2013 0:00,-3.39907893,379,110.03,5,bitfloor USD refund
+2,8/29/2013 4:22,0.3,-35.7,119,0.51,coinbase buy
+2,8/30/2013 15:05,0.5,-56.93,113.86,0.72,coinbase buy
+2,8/30/2013 19:51,0.8,-100.28,125.35,1.15,coinbase buy
+2,8/30/2013 20:37,-0.1130999,15,132.63,0,online subscription purchase
 ```
 
 `Type` is the type of transaction represented. `0 = Deposit`, `1 = Withdraw`, `2 = Buy/Sell`
@@ -46,7 +68,7 @@ Type,Date,BTC,USD,USD/BTC,Fee,Description
 
 `Description` can be optionally supplied.
 
-===
+=
 
 **Use case examples**
 
@@ -74,7 +96,7 @@ Explanation: On 10/19/2013, I sold 2.051 BTC in exchange for $334.87.  At the ti
 
 Explanation: On 11/5/2013, I purchased 0.5 BTC worth $122.62.  At the time of the transaction, 1 BTC was worth 245.24.  There was no fee associated with this transaction.
 
-===
+=
 
 If you found this program to be useful and would like to donate, 1FkkWv8wQqJBWUcRCZkd73D8pAsykxCGNM
 
