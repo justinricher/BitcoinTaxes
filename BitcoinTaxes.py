@@ -21,15 +21,29 @@ import copy
 from datetime import *
 from dateutil.relativedelta import relativedelta
 import locale
+from optparse import OptionParser
 import string
 import sys
 from time import strftime, strptime
 
+satoshi = 0.0000001
+
 def main():
     try:
         locale.setlocale(locale.LC_ALL, '')
-        print "Processing File:", sys.argv[1]
-        data = getData(sys.argv[1])
+        
+        parser = OptionParser()
+        parser.add_option("-f", "--file", dest="filename", help="Input .csv file path")
+        parser.add_option("-v", "--verbose", action="store_true", dest="verbose", default=False, help="verbose console output")
+        
+        (options, args) = parser.parse_args()
+        
+        if(len(options.filename) == 0):
+            print "Invalid input file, please try again."
+            return
+        
+        print "Processing File:", options.filename
+        data = getData(options.filename)
         transactions = []
         workingCopy = []
         yearlyValues = {}
@@ -44,7 +58,6 @@ def main():
         # create a working copy of the transactions used for modification while
         # iterating through the original collection.
         workingCopy = copy.deepcopy(transactions)
-        
         for trans in transactions:
             # store aggregate data for the year allowing all transactions to appear
             # in one large file while keeping tax values separated.
@@ -66,8 +79,10 @@ def main():
                 pass
             if trans.type == 2:
                 if trans.btc < 0:
+                    if options.verbose:
+                        print trans.time, "Selling", abs(trans.btc), "BTC"
                     # Sale
-                    shortGain, longGain, basis, proceeds, workingCopy = saleAction(trans, workingCopy)
+                    shortGain, longGain, basis, proceeds, workingCopy = saleAction(trans, workingCopy, options.verbose)
                     yearlyValues[year].shortGain += shortGain
                     yearlyValues[year].longGain += longGain
                     yearlyValues[year].sold += trans.usd
@@ -81,6 +96,9 @@ def main():
     
                 yearlyValues[year].endingBtc += trans.btc
         
+        print "\n\n#############################################"
+        print "###############    Results    ###############"
+        print "#############################################\n"
         # endingBtc is known for each year, use this value to compute
         # running total btc balance known as cumulativeBtc
         for year in yearlyValues:
@@ -88,11 +106,10 @@ def main():
                 if year2 >= year:
                     yearlyValues[year2].cumulativeBtc += yearlyValues[year].endingBtc
             print (str(year) + ":"), yearlyValues[year]
-                
     except Exception:
         print "Unexpected error:", sys.exc_info() 
 
-def saleAction(bTrans, workingCopy):
+def saleAction(bTrans, workingCopy, verbose):
     shortGain = 0.0
     longGain = 0.0
     basis = 0.0
@@ -100,18 +117,28 @@ def saleAction(bTrans, workingCopy):
     complete = False
     
     for aTrans in workingCopy:
-        if(aTrans.presentBalance > 0 and aTrans.type == 2):
+        # just checking greater than zero doesn't work because of floating point values
+        # so we check for 1 satoshi
+        if(aTrans.presentBalance >= satoshi and aTrans.type == 2):
             thisProceeds = 0.0
             thisBasis = 0.0
             # the sell volume can be filled from this single past purchase
-            if(aTrans.presentBalance >= (bTrans.presentBalance * -1.0)):   
-                # mark a portion of this past purchase as sold by reducing current quantity
-                aTrans.presentBalance += bTrans.presentBalance
+            if(aTrans.presentBalance >= (bTrans.presentBalance * -1.0)):  
                 thisBasis = (aTrans.usd / aTrans.btc) * bTrans.presentBalance
                 thisProceeds = (bTrans.presentBalance / bTrans.btc) * (bTrans.usd - bTrans.fee)
                 basis += thisBasis
                 proceeds += thisProceeds
                 complete = True
+                
+                if verbose:
+                    detail = "" if (abs(aTrans.presentBalance - aTrans.btc) < satoshi)\
+                                else " (" + str(aTrans.presentBalance) + " BTC remaining)" 
+                    print "\t", abs(bTrans.presentBalance), "BTC fully filled from", str(aTrans.btc) + " BTC" + detail,\
+                        "purchased on", aTrans.time, "(basis:", locale.currency(thisBasis, grouping=True),\
+                        "proceeds:", locale.currency(thisProceeds, grouping=True) + ")"
+                
+                # mark a portion of this past purchase as sold by reducing current quantity
+                aTrans.presentBalance += bTrans.presentBalance
             
             # current sale is greater than this last purchase, take only as much as
             # is currently available and then proceed to the next btc purchase event
@@ -120,6 +147,14 @@ def saleAction(bTrans, workingCopy):
                 thisProceeds = aTrans.presentBalance * ((bTrans.usd - bTrans.fee) / bTrans.btc * -1)
                 basis += thisBasis
                 proceeds += thisProceeds
+                
+                if verbose:
+                    detail = "" if (abs(aTrans.presentBalance - aTrans.btc) < satoshi)\
+                                else " (" + str(aTrans.presentBalance) + " BTC remaining)" 
+                    print "\t", abs(bTrans.presentBalance), "BTC partially filled from", str(aTrans.btc) + " BTC" + detail,\
+                        "purchased on", aTrans.time, "(basis:", locale.currency(thisBasis, grouping=True),\
+                        "proceeds:", locale.currency(thisProceeds, grouping=True) + ")"
+                    
                 bTrans.presentBalance += aTrans.presentBalance
                 aTrans.presentBalance = 0
             
@@ -205,13 +240,9 @@ class Transaction:
         self.presentBalance = float(btc)
        
     def __str__(self):
-        return str(self.type) + ',' + str(self.datetime) + ',' +\
-            str(self.btc) + ',' + str(self.usd) + ',' + str(self.btc_price) + "," +\
-            str(self.fee) + "," + str(self.description) + "," + str(self.presentBalance)
+        return str(self.__dict__)
     def __repr__(self):
-        return str(self.type) + ',' + str(self.datetime) + ',' +\
-            str(self.btc) + ',' + str(self.usd) + ',' + str(self.btc_price) + "," +\
-            str(self.fee) + "," + str(self.description) + "," + str(self.presentBalance)
+        return str(self.__dict__)
     
 if __name__ == "__main__":
     main()
