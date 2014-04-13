@@ -16,9 +16,9 @@ You are encouraged to enter your entire Bitcoin transactional history in a singl
 (fictional transaction history)
 ```
 Processing File: C:/2013 Taxes/Bitcoin Transactions.csv
-2012: bought: $303.95, sold: $0.00, short term gain: $0.00, long term gain: $0.00, btcDelta: 3.18453891, cumulativeBtc: 3.18453891
-2013: bought: $8,631.22, sold: $9,660.83, short term gain: $949.39, long term gain: $46.44, btcDelta: -2.75453891, cumulativeBtc: 0.43
-2014: bought: $4,864.60, sold: $4,568.55, short term gain: ($275.30), long term gain: $0.00, btcDelta: 0.22365609, cumulativeBtc: 0.65365609
+2012: bought: $303.95, sold: $0.00, basis: $0.00, proceeds: $0.00, short term gain: $0.00, long term gain: $0.00, btcDelta: 3.18453891, cumulativeBtc: 3.18453891
+2013: bought: $8,631.22, sold: $9,665.83, basis: $8,600.84, proceeds: $9,616.87, short term gain: $969.58, long term gain: $46.44, btcDelta: -2.75453891, cumulativeBtc: 0.43
+2014: bought: $4,864.60, sold: $4,568.55, basis: $4,833.01, proceeds: $4,545.72, short term gain: ($287.29), long term gain: $0.00, btcDelta: 0.22365609, cumulativeBtc: 0.65365609
 ```
 
 **Sample Input**
