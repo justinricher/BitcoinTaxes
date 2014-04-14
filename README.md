@@ -24,10 +24,10 @@ Options:
 
 **Sample Output**
 
-The output below shows fictional transaction history with verbose output and the full input path is abbreviated.  Transactions with $0.00 basis were recorded as such in the .csv file because they were tips, donations, or fully taxable acquisitions of BTC with no basis.
+The output below shows fictional transaction history.  Transactions with $0.00 basis were recorded as such in the .csv file because they were tips, donations, or fully taxable acquisitions of BTC with no basis.
 
 ```
-Processing File: C:\(...)\Bitcoin Transactions.csv
+Processing File: C:\Bitcoin Transactions.csv
 2013-08-11 20:00:00 Selling 3.39907893 BTC
 	3.39907893 BTC partially filled from 3.18453891 BTC purchased on 2013-03-27 13:27:00 (basis: $303.95 proceeds: $350.39)
 	0.21454002 BTC partially filled from 0.0112759 BTC purchased on 2013-03-28 00:37:00 (basis: $0.00 proceeds: $1.24)
