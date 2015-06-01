@@ -1,3 +1,5 @@
+**This python script is no longer actively developed.  BitcoinTaxes can now be found at http://garypaduana.com/bitcoinTaxes**
+
 BitcoinTaxes
 =
 
